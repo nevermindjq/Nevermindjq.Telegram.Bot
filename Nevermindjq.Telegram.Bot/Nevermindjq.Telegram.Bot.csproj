@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
 
         <PackageId>Nevermindjq.Telegram.Bot</PackageId>
-        <Version>1.2.1</Version>
+        <Version>1.2.2</Version>
         <Authors>Nevermindjq</Authors>
         <RepositoryUrl>https://github.com/nevermindjq/Nevermindjq.Telegram.Bot</RepositoryUrl>
     </PropertyGroup>
