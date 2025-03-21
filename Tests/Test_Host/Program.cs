@@ -26,12 +26,12 @@ builder.Services.AddSlimMessageBus(config => {
 });
 
 builder.Services.AddCommand("/start", (services, _) => new AnswerCommand {
-	Text = "Some Text",
+	Text = _ => "Some Text",
 	Bot = services.GetRequiredService<ITelegramBotClient>()
 });
 
 builder.Services.AddCommand("/info", (services, _) => new AnswerCommand {
-	Text = "Some Info",
+	Text = _ => "Some Info",
 	Bot = services.GetRequiredService<ITelegramBotClient>()
 });
 
