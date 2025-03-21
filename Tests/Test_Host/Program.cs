@@ -25,12 +25,12 @@ builder.Services.AddSlimMessageBus(config => {
 		  .AutoDeclareCommands();
 });
 
-builder.Services.AddKeyedSingleton<IConsumer<Update>, AnswerCommand>("/start", (services, _) => new AnswerCommand {
+builder.Services.AddCommand("/start", (services, _) => new AnswerCommand {
 	Text = "Some Text",
 	Bot = services.GetRequiredService<ITelegramBotClient>()
 });
 
-builder.Services.AddKeyedSingleton<IConsumer<Update>, AnswerCommand>("/info", (services, _) => new AnswerCommand {
+builder.Services.AddCommand("/info", (services, _) => new AnswerCommand {
 	Text = "Some Info",
 	Bot = services.GetRequiredService<ITelegramBotClient>()
 });
