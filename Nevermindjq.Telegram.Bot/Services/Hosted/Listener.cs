@@ -1,13 +1,14 @@
 using Microsoft.Extensions.Hosting;
+using Nevermindjq.Models.Services.States.Abstractions;
+using Nevermindjq.Telegram.Bot.States;
 using Serilog;
 using SlimMessageBus;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace Nevermindjq.Telegram.Bot.Services.Hosted {
-	public class Listener(ITelegramBotClient bot, IMessageBus bus, BotStateRepository state) : IHostedService, IUpdateHandler {
+	public class Listener(ITelegramBotClient bot, IState<BotState> state, UpdateDispatcher dispatcher) : IHostedService, IUpdateHandler {
 		public async Task StartAsync(CancellationToken cancellationToken) {
 			if (!await bot.TestApi(cancellationToken)){
 				throw new Exception("Test API failed");
@@ -29,7 +30,7 @@ namespace Nevermindjq.Telegram.Bot.Services.Hosted {
 		}
 
 		public Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken) {
-			return bus.Publish(update, cancellationToken: cancellationToken);
+			return dispatcher.Dispatch(update);
 		}
 
 		public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken) {

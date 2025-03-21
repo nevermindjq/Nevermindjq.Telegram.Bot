@@ -4,7 +4,8 @@ using FileOptions=Nevermindjq.Models.Services.States.Options.FileOptions;
 
 namespace Tests;
 
-public class Tests {
+[TestFixture]
+public class Tests_BotStateRepository {
 	private BotStateRepository _state;
 
 	[OneTimeSetUp] public void OneTimeSetUp() {
@@ -15,7 +16,7 @@ public class Tests {
 		};
 	}
 
-	[Test] public async Task TestStart() {
+	[Test] public async Task Test_Start() {
 		if (Directory.Exists("Data")) {
 			Directory.Delete("Data", true);
 		}
@@ -26,7 +27,7 @@ public class Tests {
 		Assert.That(_state.Model.Offset, Is.EqualTo(50));
 	}
 
-	[Test] public async Task TestStop() {
+	[Test] public async Task Test_Stop() {
 		await _state.StopAsync(default);
 
 		Assert.That(File.Exists(Path.Combine(_state.Options.Root, _state.Options.FileName)), Is.True);

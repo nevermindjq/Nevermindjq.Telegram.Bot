@@ -1,9 +1,8 @@
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Nevermindjq.Telegram.Bot.Commands.Abstractions;
-using Telegram.Bot.Types;
 
-namespace Nevermindjq.Telegram.Bot.Commands {
+namespace Nevermindjq.Telegram.Bot.Commands.Filtered {
 	public abstract class Callback : Command {
 		private readonly string _data;
 

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using Telegram.Bot.Types;
 
 namespace Nevermindjq.Telegram.Bot.Commands.Abstractions {
 	public abstract class Command(DbContext? context = null) : ICommand, IAuthenticator {

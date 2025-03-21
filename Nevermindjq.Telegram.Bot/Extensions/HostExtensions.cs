@@ -14,6 +14,8 @@ namespace Nevermindjq.Telegram.Bot.Extensions {
 			services.AddSingleton<IState<BotState>, BotStateRepository>(services => services.GetRequiredService<BotStateRepository>());
 			services.AddHostedService<BotStateRepository>(services => services.GetRequiredService<BotStateRepository>());
 
+			services.AddSingleton<UpdateDispatcher>();
+
 			services.AddHostedService<Listener>();
 		}
 	}

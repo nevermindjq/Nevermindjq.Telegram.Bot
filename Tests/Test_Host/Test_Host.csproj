@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>dotnet-Test_Host-20804687-51a0-4451-b47d-9c060cd9ac5f</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1"/>
+        <PackageReference Include="SlimMessageBus.Host" Version="3.0.2" />
+        <PackageReference Include="SlimMessageBus.Host.Memory" Version="3.0.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Nevermindjq.Telegram.Bot\Nevermindjq.Telegram.Bot.csproj" />
+    </ItemGroup>
+</Project>
