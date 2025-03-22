@@ -34,9 +34,7 @@ namespace Nevermindjq.Telegram.Bot.Services.Hosted {
 		}
 
 		public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken) {
-			Log.Error(exception, "Error was occured while handling update");
-
-			return Task.CompletedTask;
+			return Task.Run(() => Log.Error(exception, "Error was occured while handling update"), cancellationToken);
 		}
 	}
 }

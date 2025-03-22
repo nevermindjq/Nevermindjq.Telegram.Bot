@@ -1,21 +1,20 @@
 using Microsoft.Extensions.DependencyInjection;
 
+using Nevermindjq.Telegram.Bot.Commands.Abstractions;
 using Nevermindjq.Telegram.Bot.Extensions;
 
-using SlimMessageBus;
-
 namespace Nevermindjq.Telegram.Bot.Services {
-	public class UpdateDispatcher(IMessageBus bus, IServiceScopeFactory factory) {
+	public class UpdateDispatcher(IServiceScopeFactory factory) {
 		public Task Dispatch(Update update) {
 			if (GetTrigger(update) is { } trigger) {
 				using (var scope = factory.CreateScope()) {
-					if (scope.ServiceProvider.GetKeyedService<IConsumer<Update>>(trigger) is { } consumer) {
+					if (scope.ServiceProvider.GetKeyedService<ICommand>($"{nameof(Update)} {trigger}") is { } consumer) {
 						return consumer.OnHandle(update, default);
 					}
 				}
 			}
 
-			return bus.Publish(update, nameof(Update));
+			return Task.CompletedTask;
 		}
 
 		protected string? GetTrigger(Update update) {
