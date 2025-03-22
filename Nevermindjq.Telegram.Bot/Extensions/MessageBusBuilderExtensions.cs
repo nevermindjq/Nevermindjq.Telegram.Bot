@@ -8,8 +8,9 @@ using SlimMessageBus.Host.Memory;
 namespace Nevermindjq.Telegram.Bot.Extensions;
 
 public static class MessageBusBuilderExtensions {
-	public static void AutoDeclareCommands(this MemoryMessageBusBuilder builder) {
-		builder.AutoDeclareFrom(Assembly.GetExecutingAssembly(), type => type.GetCustomAttribute<PathAttribute>() is not null);
+	public static void AutoRegisterCommands(this MemoryMessageBusBuilder builder, Assembly assembly) {
+		builder.AutoDeclareFrom(assembly, type => type.GetCustomAttribute<PathAttribute>() is null, _ => nameof(Update))
+			   .AddServicesFromAssembly(assembly, type => type.GetCustomAttribute<PathAttribute>() is null);
 
 		builder.RegisterCommandsWithPath();
 	}

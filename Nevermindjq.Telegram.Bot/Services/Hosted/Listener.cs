@@ -2,7 +2,7 @@ using Microsoft.Extensions.Hosting;
 using Nevermindjq.Models.Services.States.Abstractions;
 using Nevermindjq.Telegram.Bot.States;
 using Serilog;
-using SlimMessageBus;
+
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types.Enums;

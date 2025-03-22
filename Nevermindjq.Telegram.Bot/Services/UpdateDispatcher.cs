@@ -5,13 +5,17 @@ using Nevermindjq.Telegram.Bot.Extensions;
 using SlimMessageBus;
 
 namespace Nevermindjq.Telegram.Bot.Services {
-	public class UpdateDispatcher(IMessageBus bus, IServiceProvider services) {
+	public class UpdateDispatcher(IMessageBus bus, IServiceScopeFactory factory) {
 		public Task Dispatch(Update update) {
-			if (GetTrigger(update) is { } trigger && services.GetKeyedService<IConsumer<Update>>(trigger) is { } consumer) {
-				return consumer.OnHandle(update, default);
+			if (GetTrigger(update) is { } trigger) {
+				using (var scope = factory.CreateScope()) {
+					if (scope.ServiceProvider.GetKeyedService<IConsumer<Update>>(trigger) is { } consumer) {
+						return consumer.OnHandle(update, default);
+					}
+				}
 			}
 
-			return bus.Publish(update);
+			return bus.Publish(update, nameof(Update));
 		}
 
 		protected string? GetTrigger(Update update) {

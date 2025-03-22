@@ -1,28 +1,25 @@
 using System.Reflection;
+
+using Bot.Data;
+
+using Microsoft.EntityFrameworkCore;
+
 using Nevermindjq.Telegram.Bot.Commands;
 using Nevermindjq.Telegram.Bot.Extensions;
-using SlimMessageBus;
+
 using SlimMessageBus.Host;
 using SlimMessageBus.Host.Memory;
 using Telegram.Bot;
-using Telegram.Bot.Types;
-using FileOptions=Nevermindjq.Models.Services.States.Options.FileOptions;
+
+using FileOptions = Nevermindjq.Models.Services.States.Options.FileOptions;
 
 // Build
 var builder = Host.CreateApplicationBuilder(args);
 
-#region Configuration
-
-builder.Environment.EnvironmentName = Environment.GetEnvironmentVariable("ENVIRONMENT") ?? "Production";
-builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, false);
-builder.Configuration.AddUserSecrets(Assembly.GetAssembly(typeof(Program))!, true, false);
-builder.Configuration.AddCommandLine(args);
-
-#endregion
+builder.Services.AddDbContext<UsersDbContext>(x => x.UseNpgsql(builder.Configuration.GetConnectionString("Users")), ServiceLifetime.Singleton);
 
 builder.Services.AddSlimMessageBus(config => {
-	config.WithProviderMemory()
-		  .AutoDeclareCommands();
+	config.WithProviderMemory().AutoRegisterCommands(Assembly.GetExecutingAssembly());
 });
 
 builder.Services.AddCommand("/start", (services, _) => new AnswerCommand {
