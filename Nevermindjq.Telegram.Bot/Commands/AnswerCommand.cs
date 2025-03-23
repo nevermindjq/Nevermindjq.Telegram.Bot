@@ -17,9 +17,7 @@ namespace Nevermindjq.Telegram.Bot.Commands {
 		public ParseMode ParseMode { get; set; } = ParseMode.MarkdownV2;
 
 		public override Task ExecuteAsync(Update update) {
-			return Bot.SendMessage(GetUserId(update), Text(update), ParseMode, replyMarkup: Markup);
+			return Bot.SendMessage(update.Message.Chat.Id, Text(update), ParseMode, replyMarkup: Markup);
 		}
-
-		protected override long GetUserId(Update update) => update.Message.Chat.Id;
 	}
 }
