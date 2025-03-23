@@ -25,8 +25,10 @@ namespace Nevermindjq.Telegram.Bot.Services {
 				var middleware_type = typeof(ICommandMiddleware<>)
 					.MakeGenericType(interface_type);
 
-				if (scope.ServiceProvider.GetService(middleware_type) is { } middleware) {
-					await (Task)middleware_type.GetMethod(nameof(ICommandMiddleware<ICommand>.HandleAsync))!.Invoke(middleware, new object[] { update, command })!;
+				if (scope.ServiceProvider.GetService(middleware_type) is { } middleware&&
+					!await (Task<bool>)middleware_type.GetMethod(nameof(ICommandMiddleware<ICommand>.HandleAsync))!
+													  .Invoke(middleware, new object[] { update, command })!) {
+					return;
 				}
 			}
 
