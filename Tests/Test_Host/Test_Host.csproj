@@ -13,8 +13,6 @@
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1"/>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-        <PackageReference Include="SlimMessageBus.Host" Version="3.0.2" />
-        <PackageReference Include="SlimMessageBus.Host.Memory" Version="3.0.2" />
     </ItemGroup>
 
     <ItemGroup>
