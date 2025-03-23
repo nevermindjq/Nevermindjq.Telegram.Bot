@@ -27,7 +27,10 @@ namespace Nevermindjq.Telegram.Bot.Extensions {
 			services.AddSingleton<IState<BotState>, BotStateRepository>(services => services.GetRequiredService<BotStateRepository>());
 			services.AddHostedService(services => services.GetRequiredService<BotStateRepository>());
 
-			services.AddSingleton<IUpdateDispatcher, UpdateDispatcher>();
+			services.AddSingleton<UpdateDispatcher>();
+			services.AddSingleton<IUpdateDispatcher>(x => x.GetRequiredService<UpdateDispatcher>());
+			services.AddSingleton<IUpdateMediator<long>>(x => x.GetRequiredService<UpdateDispatcher>());
+
 			services.AddCommands(assembly);
 
 			services.AddHostedService<Listener>();
@@ -46,13 +49,16 @@ namespace Nevermindjq.Telegram.Bot.Extensions {
 			foreach (var (type, attr) in types) {
 				switch (type.GetCustomAttribute<LifetimeAttribute>()?.Lifetime ?? ServiceLifetime.Transient) {
 					case ServiceLifetime.Singleton:
-						services.AddKeyedSingleton(typeof(ICommand), $"{nameof(Update)} {attr.Path}", type);
+						services.AddSingleton(type);
+						services.AddKeyedSingleton(typeof(ICommand), $"{nameof(Update)} {attr.Path}", (x, _) => x.GetService(type));
 						break;
 					case ServiceLifetime.Scoped:
-						services.AddKeyedScoped(typeof(ICommand), $"{nameof(Update)} {attr.Path}", type);
+						services.AddScoped(type);
+						services.AddKeyedScoped(typeof(ICommand), $"{nameof(Update)} {attr.Path}", (x, _) => x.GetService(type));
 						break;
 					case ServiceLifetime.Transient:
-						services.AddKeyedTransient(typeof(ICommand), $"{nameof(Update)} {attr.Path}", type);
+						services.AddTransient(type);
+						services.AddKeyedTransient(typeof(ICommand), $"{nameof(Update)} {attr.Path}", (x, _) => x.GetService(type));
 						break;
 				}
 			}

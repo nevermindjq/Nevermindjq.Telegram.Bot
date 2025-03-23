@@ -9,7 +9,9 @@ using Nevermindjq.Telegram.Bot.Services.Abstractions;
 using Serilog;
 
 namespace Nevermindjq.Telegram.Bot.Services {
-	public class UpdateDispatcher(IServiceScopeFactory factory) : IUpdateDispatcher {
+	public class UpdateDispatcher(IServiceScopeFactory factory) : IUpdateDispatcher, IUpdateMediator<long> {
+		private readonly Dictionary<long, Type> m_commands = new();
+
 		public async Task Dispatch(Update update) {
 			if (GetTrigger(update) is not { } trigger) {
 				return;
@@ -18,7 +20,15 @@ namespace Nevermindjq.Telegram.Bot.Services {
 			using var scope = factory.CreateScope();
 
 			// Get command
-			if (scope.ServiceProvider.GetKeyedService<ICommand>($"{nameof(Update)} {trigger}") is not { } command) {
+			ICommand? command = null;
+
+			if (update is { Message.From.Id: var id } && GetNext(id) is { } next) {
+				command = (ICommand?)scope.ServiceProvider.GetService(next);
+			}
+
+			command ??= scope.ServiceProvider.GetKeyedService<ICommand>($"{nameof(Update)} {trigger}");
+
+			if (command is null) {
 				return;
 			}
 
@@ -56,6 +66,17 @@ namespace Nevermindjq.Telegram.Bot.Services {
 				{ CallbackQuery: not null } => update.CallbackQuery.Data!.UpTo(0, " "),
 				_ => null
 			};
+		}
+
+		// IUpdateMediator
+		public bool AddNext<TCommand>(long key) where TCommand : ICommand {
+			return m_commands.TryAdd(key, typeof(TCommand));
+		}
+
+		public bool AddNext<TCommand>(Update update) where TCommand : ICommand => AddNext<TCommand>(update.Message.From.Id);
+
+		public Type? GetNext(long key) {
+			return m_commands.GetValueOrDefault(key);
 		}
 	}
 }
