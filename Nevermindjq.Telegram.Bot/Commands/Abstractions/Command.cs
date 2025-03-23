@@ -3,11 +3,7 @@ using Serilog;
 namespace Nevermindjq.Telegram.Bot.Commands.Abstractions {
 	public abstract class Command: ICommand {
 
-		public virtual async Task OnHandle(Update update, CancellationToken cancellationToken) {
-			if (!await CanExecuteAsync(update)){
-				return;
-			}
-
+		public async Task OnHandleAsync(Update update) {
 			var type = this.GetType();
 
 			Log.Verbose("Starting. Command {0}.", type.Name);
