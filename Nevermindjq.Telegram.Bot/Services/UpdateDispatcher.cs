@@ -3,6 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Nevermindjq.Telegram.Bot.Commands.Abstractions;
 using Nevermindjq.Telegram.Bot.Extensions;
 using Nevermindjq.Telegram.Bot.Middlewares.Abstractions;
+using Nevermindjq.Telegram.Bot.Middlewares.Models.Abstractions;
+
+using Serilog;
 
 namespace Nevermindjq.Telegram.Bot.Services {
 	public class UpdateDispatcher(IServiceScopeFactory factory) {
@@ -25,10 +28,20 @@ namespace Nevermindjq.Telegram.Bot.Services {
 				var middleware_type = typeof(ICommandMiddleware<>)
 					.MakeGenericType(interface_type);
 
-				if (scope.ServiceProvider.GetService(middleware_type) is { } middleware&&
-					!await (Task<bool>)middleware_type.GetMethod(nameof(ICommandMiddleware<ICommand>.HandleAsync))!
-													  .Invoke(middleware, new object[] { update, command })!) {
-					return;
+				if (scope.ServiceProvider.GetService(middleware_type) is { } middleware) {
+					var response = await (Task<IMiddlewareResponse>)middleware_type
+																	.GetMethod(nameof(ICommandMiddleware<ICommand>.HandleAsync))!
+																	.Invoke(middleware, new object[] { update, command })!;
+
+					if (!response.IsSuccess) {
+						Log.Error(response.Exception, "Exception while command execution");
+
+						if (response.Redirect is not null) {
+							await ((ICommand)scope.ServiceProvider.GetRequiredService(response.Redirect)).OnHandleAsync(update);
+						}
+
+						return;
+					}
 				}
 			}
 
