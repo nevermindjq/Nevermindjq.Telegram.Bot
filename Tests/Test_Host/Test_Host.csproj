@@ -16,6 +16,11 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\Nevermindjq.Telegram.Bot.Database\Nevermindjq.Telegram.Bot.Database.csproj" />
       <ProjectReference Include="..\..\Nevermindjq.Telegram.Bot\Nevermindjq.Telegram.Bot.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Data\Migrations\Users\" />
     </ItemGroup>
 </Project>
