@@ -6,6 +6,7 @@ using Nevermindjq.Models.Services.States.Abstractions;
 using Nevermindjq.Telegram.Bot.Attributes;
 using Nevermindjq.Telegram.Bot.Commands.Abstractions;
 using Nevermindjq.Telegram.Bot.Services;
+using Nevermindjq.Telegram.Bot.Services.Abstractions;
 using Nevermindjq.Telegram.Bot.Services.Hosted;
 using Nevermindjq.Telegram.Bot.States;
 
@@ -26,7 +27,7 @@ namespace Nevermindjq.Telegram.Bot.Extensions {
 			services.AddSingleton<IState<BotState>, BotStateRepository>(services => services.GetRequiredService<BotStateRepository>());
 			services.AddHostedService(services => services.GetRequiredService<BotStateRepository>());
 
-			services.AddSingleton<UpdateDispatcher>();
+			services.AddSingleton<IUpdateDispatcher, UpdateDispatcher>();
 			services.AddCommands(assembly);
 
 			services.AddHostedService<Listener>();

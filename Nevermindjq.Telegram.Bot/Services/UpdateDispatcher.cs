@@ -4,11 +4,12 @@ using Nevermindjq.Telegram.Bot.Commands.Abstractions;
 using Nevermindjq.Telegram.Bot.Extensions;
 using Nevermindjq.Telegram.Bot.Middlewares.Abstractions;
 using Nevermindjq.Telegram.Bot.Middlewares.Models.Abstractions;
+using Nevermindjq.Telegram.Bot.Services.Abstractions;
 
 using Serilog;
 
 namespace Nevermindjq.Telegram.Bot.Services {
-	public class UpdateDispatcher(IServiceScopeFactory factory) {
+	public class UpdateDispatcher(IServiceScopeFactory factory) : IUpdateDispatcher {
 		public async Task Dispatch(Update update) {
 			if (GetTrigger(update) is not { } trigger) {
 				return;
