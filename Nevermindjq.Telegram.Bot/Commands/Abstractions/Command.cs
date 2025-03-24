@@ -6,8 +6,6 @@ namespace Nevermindjq.Telegram.Bot.Commands.Abstractions {
 		public async Task OnHandleAsync(Update update) {
 			var type = this.GetType();
 
-			Log.Verbose("Starting. Command {0}.", type.Name);
-
 			try {
 				await ExecuteAsync(update);
 			}
@@ -15,8 +13,6 @@ namespace Nevermindjq.Telegram.Bot.Commands.Abstractions {
 				Log.Error(e, "Error while executing. Command: {0}.", type.Name);
 				throw;
 			}
-
-			Log.Verbose("Command successfully executed. Command: {0}.", type.Name);
 		}
 
 		// ICommand

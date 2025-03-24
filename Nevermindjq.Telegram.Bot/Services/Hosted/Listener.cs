@@ -11,6 +11,8 @@ using Telegram.Bot.Types.Enums;
 namespace Nevermindjq.Telegram.Bot.Services.Hosted {
 	public class Listener(ITelegramBotClient bot, IState<BotState> state, IUpdateDispatcher dispatcher) : IHostedService, IUpdateHandler {
 		public async Task StartAsync(CancellationToken cancellationToken) {
+			Log.Information("Listener starting");
+
 			if (!await bot.TestApi(cancellationToken)){
 				throw new Exception("Test API failed");
 			}
@@ -24,6 +26,8 @@ namespace Nevermindjq.Telegram.Bot.Services.Hosted {
 				Limit = state.Model.Limit,
 				Offset = state.Model.Offset,
 			}, cancellationToken: cancellationToken);
+
+			Log.Information("Listener started");
 		}
 
 		public Task StopAsync(CancellationToken cancellationToken) {
