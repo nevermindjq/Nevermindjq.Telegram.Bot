@@ -76,7 +76,11 @@ namespace Nevermindjq.Telegram.Bot.Services {
 		public bool AddNext<TCommand>(Update update) where TCommand : ICommand => AddNext<TCommand>(update.Message.From.Id);
 
 		public Type? GetNext(long key) {
-			return m_commands.GetValueOrDefault(key);
+			var type = m_commands.GetValueOrDefault(key);
+
+			m_commands.Remove(key);
+
+			return type;
 		}
 	}
 }
