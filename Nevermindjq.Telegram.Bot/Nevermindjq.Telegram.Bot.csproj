@@ -8,7 +8,11 @@
         <PackageId>Nevermindjq.Telegram.Bot</PackageId>
         <Version>1.3.6</Version>
         <Authors>Nevermindjq</Authors>
-        <RepositoryUrl>https://github.com/nevermindjq/Nevermindjq.Telegram.Bot</RepositoryUrl>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <IsPackable>true</IsPackable>
+
+        <RepositoryUrl>https://github.com/nevermindjq/Nevermindjq.Telegram.Bot.git</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/nevermindjq/Nevermindjq.Telegram.Bot</PackageProjectUrl>
     </PropertyGroup>
 
     <ItemGroup>
