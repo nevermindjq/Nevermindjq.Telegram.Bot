@@ -1,5 +1,8 @@
+using System.Reflection;
+
 using Microsoft.Extensions.Hosting;
 using Nevermindjq.Models.Services.States.Abstractions;
+using Nevermindjq.Telegram.Bot.Extensions;
 using Nevermindjq.Telegram.Bot.Services.Abstractions;
 using Nevermindjq.Telegram.Bot.States;
 using Serilog;
@@ -16,6 +19,8 @@ namespace Nevermindjq.Telegram.Bot.Services.Hosted {
 			if (!await bot.TestApi(cancellationToken)){
 				throw new Exception("Test API failed");
 			}
+
+			await bot.RegisterCommandsAsync(Assembly.GetEntryAssembly()!);
 
 			bot.StartReceiving(HandleUpdateAsync, HandleErrorAsync, new ReceiverOptions {
 				AllowedUpdates = [

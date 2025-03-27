@@ -1,5 +1,6 @@
 using System.Reflection;
 
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 using Nevermindjq.Models.Services.States.Abstractions;
@@ -12,11 +13,9 @@ using Nevermindjq.Telegram.Bot.States;
 
 using Telegram.Bot;
 
-#nullable disable
-
 namespace Nevermindjq.Telegram.Bot.Extensions {
 	public static class HostExtensions {
-		public static void AddTelegramBot(this IServiceCollection services, Assembly assembly, string token, FileOptions? options = null) {
+		public static void AddTelegramBot(this IServiceCollection services, string token, FileOptions? options = null) {
 			// Set Defaults
 			options ??= new FileOptions(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Bot"), "options");
 
@@ -31,22 +30,27 @@ namespace Nevermindjq.Telegram.Bot.Extensions {
 			services.AddSingleton<IUpdateDispatcher>(x => x.GetRequiredService<UpdateDispatcher>());
 			services.AddSingleton<IUpdateMediator<long>>(x => x.GetRequiredService<UpdateDispatcher>());
 
-			services.AddCommands(assembly);
+			services.AddCommands(Assembly.GetEntryAssembly()!);
 
 			services.AddHostedService<Listener>();
 
 		}
 
-		public static void AddCommand<TCommand>(this IServiceCollection services, string key, Func<IServiceProvider, object?, TCommand> factory) where TCommand : class, ICommand {
+		public static void AddCommand<TCommand>(this IServiceCollection services, string key, Func<IServiceProvider, object?, TCommand> factory, string? description = null, int order = 0) where TCommand : class, ICommand {
 			services.AddKeyedTransient<ICommand, TCommand>($"{nameof(Update)} {key}",  factory);
+
+			if (description is not null) {
+				ClientExtensions.i_CommandAttributes.Add(new(key) {
+					Description = description,
+					InformationOrder = order
+				});
+			}
 		}
 
 		private static void AddCommands(this IServiceCollection services, Assembly assembly) {
-			var types = assembly.GetTypes()
-								.Select(x => (type: x, attr: x.GetCustomAttribute<PathAttribute>()))
-								.Where(x => x.attr is not null);
+			var commands = assembly.Commands();
 
-			foreach (var (type, attr) in types) {
+			foreach (var (type, attr) in commands) {
 				switch (type.GetCustomAttribute<LifetimeAttribute>()?.Lifetime ?? ServiceLifetime.Transient) {
 					case ServiceLifetime.Singleton:
 						services.AddSingleton(type);
