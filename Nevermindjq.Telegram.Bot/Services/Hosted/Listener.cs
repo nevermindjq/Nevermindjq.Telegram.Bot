@@ -11,40 +11,40 @@ using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types.Enums;
 
-namespace Nevermindjq.Telegram.Bot.Services.Hosted {
-	public class Listener(ITelegramBotClient bot, IState<BotState> state, IUpdateDispatcher dispatcher) : IHostedService, IUpdateHandler {
-		public async Task StartAsync(CancellationToken cancellationToken) {
-			Log.Information("Listener starting");
+namespace Nevermindjq.Telegram.Bot.Services.Hosted;
 
-			if (!await bot.TestApi(cancellationToken)){
-				throw new Exception("Test API failed");
-			}
+public class Listener(ITelegramBotClient bot, IState<BotState> state, IUpdateDispatcher dispatcher) : IHostedService, IUpdateHandler {
+	public async Task StartAsync(CancellationToken cancellationToken) {
+		Log.Information("Listener starting");
 
-			await bot.RegisterCommandsAsync(Assembly.GetEntryAssembly()!);
-
-			bot.StartReceiving(HandleUpdateAsync, HandleErrorAsync, new ReceiverOptions {
-				AllowedUpdates = [
-					UpdateType.Message,
-					UpdateType.CallbackQuery
-				],
-				DropPendingUpdates = state.Model.HandlePendingUpdates,
-				Limit = state.Model.Limit,
-				Offset = state.Model.Offset,
-			}, cancellationToken: cancellationToken);
-
-			Log.Information("Listener started");
+		if (!await bot.TestApi(cancellationToken)){
+			throw new Exception("Test API failed");
 		}
 
-		public Task StopAsync(CancellationToken cancellationToken) {
-			return Task.CompletedTask;
-		}
+		await bot.RegisterCommandsAsync(Assembly.GetEntryAssembly()!);
 
-		public Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken) {
-			return dispatcher.Dispatch(update);
-		}
+		bot.StartReceiving(HandleUpdateAsync, HandleErrorAsync, new ReceiverOptions {
+			AllowedUpdates = [
+				UpdateType.Message,
+				UpdateType.CallbackQuery
+			],
+			DropPendingUpdates = state.Model.HandlePendingUpdates,
+			Limit = state.Model.Limit,
+			Offset = state.Model.Offset,
+		}, cancellationToken: cancellationToken);
 
-		public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken) {
-			return Task.Run(() => Log.Error(exception, "Error was occured while handling update"), cancellationToken);
-		}
+		Log.Information("Listener started");
+	}
+
+	public Task StopAsync(CancellationToken cancellationToken) {
+		return Task.CompletedTask;
+	}
+
+	public Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken) {
+		return dispatcher.Dispatch(update);
+	}
+
+	public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken) {
+		return Task.Run(() => Log.Error(exception, "Error was occured while handling update"), cancellationToken);
 	}
 }

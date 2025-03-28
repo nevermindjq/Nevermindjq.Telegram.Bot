@@ -1,5 +1,3 @@
-using Nevermindjq.Telegram.Bot.Commands.Abstractions;
-
 namespace Nevermindjq.Telegram.Bot.Middlewares.Models.Abstractions;
 
 public interface IMiddlewareResponse {
