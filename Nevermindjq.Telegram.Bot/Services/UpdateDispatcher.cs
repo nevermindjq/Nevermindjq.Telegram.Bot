@@ -106,11 +106,14 @@ public class UpdateDispatcher(IServiceScopeFactory factory) : IUpdateDispatcher,
 	}
 
 	public bool AddNext<TCommand>(Update update) where TCommand : ICommand => AddNext<TCommand>(update.Message.From.Id);
+	public bool HasNext(long key) => m_commands.ContainsKey(key);
 
 	public Type? GetNext(long key) {
 		if (m_commands.GetValueOrDefault(key) is not { } type) {
 			return null;
 		}
+
+		m_commands.Remove(key);
 
 #if DEBUG
 		Log.Debug("Got & Removed command: {0}. Key: {1}", type.Name, key);
@@ -118,4 +121,6 @@ public class UpdateDispatcher(IServiceScopeFactory factory) : IUpdateDispatcher,
 
 		return type;
 	}
+
+	public void Clear(long key) => m_commands.Remove(key);
 }

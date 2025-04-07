@@ -54,15 +54,24 @@ public static class HostExtensions {
 			switch (type.GetCustomAttribute<LifetimeAttribute>()?.Lifetime ?? ServiceLifetime.Transient) {
 				case ServiceLifetime.Singleton:
 					services.AddSingleton(type);
-					services.AddKeyedSingleton(typeof(ICommand), $"{nameof(Update)} {attr.Path}", (x, _) => x.GetService(type));
+
+					if (attr is not null) {
+						services.AddKeyedSingleton(typeof(ICommand), $"{nameof(Update)} {attr.Path}", (x, _) => x.GetService(type)!);
+					}
 				break;
 				case ServiceLifetime.Scoped:
 					services.AddScoped(type);
-					services.AddKeyedScoped(typeof(ICommand), $"{nameof(Update)} {attr.Path}", (x, _) => x.GetService(type));
+
+					if (attr is not null) {
+						services.AddKeyedScoped(typeof(ICommand), $"{nameof(Update)} {attr.Path}", (x, _) => x.GetService(type)!);
+					}
 				break;
 				case ServiceLifetime.Transient:
 					services.AddTransient(type);
-					services.AddKeyedTransient(typeof(ICommand), $"{nameof(Update)} {attr.Path}", (x, _) => x.GetService(type));
+
+					if (attr is not null) {
+						services.AddKeyedTransient(typeof(ICommand), $"{nameof(Update)} {attr.Path}", (x, _) => x.GetService(type)!);
+					}
 				break;
 			}
 		}
