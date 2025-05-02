@@ -1,6 +1,6 @@
 namespace Nevermindjq.Telegram.Bot.Attributes;
 
-[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
 public class PathAttribute(string path) : Attribute {
 	public string Path { get; set; } = path;
 	public string? Description { get; set; }

@@ -1,8 +1,15 @@
+using Nevermindjq.Telegram.Bot.Services.Abstractions;
+
 using Serilog;
+
+using Telegram.Bot;
 
 namespace Nevermindjq.Telegram.Bot.Commands.Abstractions;
 
-public abstract class Command: ICommand {
+public abstract class Command : IInjectedCommand {
+	public IUserContextAsync ContextAsync { get; set; }
+	public IUpdateMediator<long> Mediator { get; set; }
+	public ITelegramBotClient Bot { get; set; }
 
 	public async Task OnHandleAsync(Update update) {
 		var type = this.GetType();

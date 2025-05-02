@@ -11,4 +11,15 @@ public class MiddlewareResponse : IMiddlewareResponse {
 	public void SetRedirect<TCommand>() where TCommand : ICommand {
 		Redirect = typeof(TCommand);
 	}
+
+	public static MiddlewareResponse CreateException<TRedirect>(string message) where TRedirect : ICommand {
+		var response = new MiddlewareResponse {
+			IsSuccess = false,
+			Exception = new Exception(message),
+		};
+
+		response.SetRedirect<TRedirect>();
+
+		return response;
+	}
 }

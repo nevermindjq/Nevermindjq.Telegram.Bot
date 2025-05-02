@@ -10,9 +10,12 @@ using Newtonsoft.Json;
 
 using Serilog;
 
+using Telegram.Bot;
+using Telegram.Bot.Types;
+
 namespace Nevermindjq.Telegram.Bot.Services;
 
-public class UpdateDispatcher(IServiceScopeFactory factory) : IUpdateDispatcher, IUpdateMediator<long> {
+internal class UpdateDispatcher(IServiceScopeFactory factory, ITelegramBotClient bot) : IUpdateDispatcher, IUpdateMediator<long> {
 	private readonly Dictionary<long, Type> m_commands = new();
 
 	public async Task Dispatch(Update update) {
@@ -22,16 +25,19 @@ public class UpdateDispatcher(IServiceScopeFactory factory) : IUpdateDispatcher,
 			return;
 		}
 
-		using var scope = factory.CreateScope();
+		await using var scope = factory.CreateAsyncScope();
+		var services = scope.ServiceProvider;
 
 		// Get command
 		ICommand? command = null;
 
 		if (update is { Message.From.Id: var id } && GetNext(id) is { } next) {
-			command = (ICommand?)scope.ServiceProvider.GetService(next);
+			command = (ICommand?)services.GetService(next);
+
+			await bot.DeleteMessages(id, [update.Message.MessageId, update.Message.MessageId - 1]);
 		}
 
-		command ??= scope.ServiceProvider.GetKeyedService<ICommand>($"{nameof(Update)} {trigger}");
+		command ??= services.GetKeyedService<ICommand>($"{nameof(Update)} {trigger}");
 
 		if (command is null) {
 			Log.Warning("Command with key: '{0} {1}' is not found.", nameof(Update), trigger);
@@ -39,45 +45,39 @@ public class UpdateDispatcher(IServiceScopeFactory factory) : IUpdateDispatcher,
 			return;
 		}
 
-		// Execute middlewares
-		var interfaces = command.GetType().GetInterfaces();
+		// Execute typed middlewares
+		if (!await ExecuteMiddlewares(
+			services, update, command,
+			@interface => {
+				return typeof(ICommandMiddleware<>).MakeGenericType(@interface);
+			}, update, command)) {
+			return;
+		}
 
-		foreach (var interface_type in interfaces) {
-			var middleware_type = typeof(ICommandMiddleware<>)
-				.MakeGenericType(interface_type);
-
-			if (scope.ServiceProvider.GetService(middleware_type) is { } middleware) {
-#if DEBUG
-				Log.Debug("Start executing {0} for command {1}.", middleware_type.Name, command.GetType().Name);
-#endif
-
-				var response = await (Task<IMiddlewareResponse>)middleware_type
-																.GetMethod(nameof(ICommandMiddleware<ICommand>.HandleAsync))!
-																.Invoke(middleware, new object[] { update, command })!;
-
-				if (!response.IsSuccess) {
-					Log.Error(response.Exception, "Exception while command execution.");
-
-					if (response.Redirect is not null) {
-#if DEBUG
-						Log.Debug("Redirecting to {0}.", response.Redirect.Name);
-#endif
-
-						await ((ICommand)scope.ServiceProvider.GetRequiredService(response.Redirect)).OnHandleAsync(update);
-					}
-
-					return;
-				}
-
-#if DEBUG
-				else {
-					Log.Debug("{0} for command {1} was successfully executed.", middleware_type.Name, command.GetType().Name);
-				}
-#endif
+		// Execute attributed middlewares
+		foreach (var attr in command.GetType().GetCustomAttributes(true)) {
+			if (!await ExecuteMiddlewares(
+				services, update, command,
+				@interface => {
+					return typeof(IAttributedMiddleware<,>)
+						.MakeGenericType(attr.GetType(), @interface);
+				}, update, attr, command)) {
+				return;
 			}
 		}
 
-		// Execute command
+		await ExecuteCommand(services, update, command);
+	}
+
+	#region Commands
+
+	protected async Task ExecuteCommand(IServiceProvider services, Update update, ICommand command) {
+		if (command is IInjectedCommand injected) {
+			injected.Bot = services.GetRequiredService<ITelegramBotClient>();
+			injected.Mediator = services.GetRequiredService<IUpdateMediator<long>>();
+			injected.ContextAsync = services.GetService<IUserContextAsync>();
+		}
+
 #if DEBUG
 		Log.Debug("Start executing command {0}.", command.GetType().Name);
 #endif
@@ -89,24 +89,86 @@ public class UpdateDispatcher(IServiceScopeFactory factory) : IUpdateDispatcher,
 #endif
 	}
 
+	#endregion
+
+	#region Middlewares
+
+	protected Task<IMiddlewareResponse> InvokeMiddleware(object? middleware, params object?[]? args) {
+		return (Task<IMiddlewareResponse>)middleware.GetType().GetMethod("HandleAsync")!.Invoke(middleware, args)!;
+	}
+
+	protected async Task<bool> ExecuteMiddleware(IServiceProvider services, Update update, IMiddlewareResponse? response, Type middleware_type, Type command_type) {
+		if (response is null) {
+			Log.Warning("Null response of executing middleware {MiddlewareName}", middleware_type.Name);
+
+			return false;
+		}
+
+		if (!response.IsSuccess) {
+			Log.Error(response.Exception, "Exception while command execution.");
+
+			if (response.Redirect is not null) {
+#if DEBUG
+				Log.Debug("Redirecting to {0}.", response.Redirect.Name);
+#endif
+
+				await ExecuteCommand(services, update, (ICommand)services.GetRequiredService(response.Redirect));
+			}
+
+			return false;
+		}
+
+#if DEBUG
+		Log.Debug("{0} for command {1} was successfully executed.", middleware_type.Name, command_type.Name);
+#endif
+
+		return true;
+	}
+
+	protected async Task<bool> ExecuteMiddlewares(IServiceProvider services, Update update, object command, Func<Type, Type> create_middleware_type, params object?[]? args) {
+		var command_type = command.GetType();
+
+		foreach (var @interface in command.GetType().GetInterfaces()) {
+			var middleware_type = create_middleware_type(@interface);
+
+			foreach (var middleware in services.GetServices(middleware_type)) {
+				if (middleware is null) {
+					continue;
+				}
+
+#if DEBUG
+				Log.Debug("Start executing {0} for command {1}.", middleware_type.Name, command_type.Name);
+#endif
+
+				if (!await ExecuteMiddleware(services, update, await InvokeMiddleware(middleware, args), middleware_type, command.GetType())) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	#endregion
+
 	protected string? GetTrigger(Update update) {
 		return update switch {
-			{ Message: not null }       => update.Message.Text!.UpTo(0, " "),
-			{ CallbackQuery: not null } => update.CallbackQuery.Data!.UpTo(0, " "),
-			_                           => null
+			{ Message.Text: not null }       => update.Message.Text.UpTo(),
+			{ CallbackQuery.Data: not null } => update.CallbackQuery.Data.UpTo(),
+			_                                => null
 		};
 	}
 
-	// IUpdateMediator
-	public bool AddNext<TCommand>(long key) where TCommand : ICommand {
+	#region IUpdateMediator
+
+	public void AddNext<TCommand>(long key) where TCommand : ICommand {
 #if DEBUG
 		Log.Debug("Added new command: {0}. Key: {1}", typeof(TCommand).Name, key);
 #endif
-		return m_commands.TryAdd(key, typeof(TCommand));
+		if (!m_commands.TryAdd(key, typeof(TCommand))) {
+			m_commands[key] = typeof(TCommand);
+		}
 	}
-
-	public bool AddNext<TCommand>(Update update) where TCommand : ICommand => AddNext<TCommand>(update.Message.From.Id);
-	public bool HasNext(long key) => m_commands.ContainsKey(key);
 
 	public Type? GetNext(long key) {
 		if (m_commands.GetValueOrDefault(key) is not { } type) {
@@ -122,5 +184,5 @@ public class UpdateDispatcher(IServiceScopeFactory factory) : IUpdateDispatcher,
 		return type;
 	}
 
-	public void Clear(long key) => m_commands.Remove(key);
+	#endregion
 }

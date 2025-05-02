@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-
-using Nevermindjq.Telegram.Bot.Database.Commands.Abstractions;
+using Nevermindjq.Models.Repositories.Abstractions;
+using Nevermindjq.Telegram.Bot.Commands.Abstractions;
+using Nevermindjq.Telegram.Bot.Database.Entities.Identity.Abstractions;
 using Nevermindjq.Telegram.Bot.Database.Models.Abstractions;
 using Nevermindjq.Telegram.Bot.Middlewares.Abstractions;
 using Nevermindjq.Telegram.Bot.Middlewares.Models;
@@ -10,19 +10,15 @@ using Telegram.Bot.Types;
 
 namespace Nevermindjq.Telegram.Bot.Database.Middlewares;
 
-public class AuthenticationMiddleware(DbContext context) : ICommandMiddleware<IAuthenticatedUser> {
-	public async Task<IMiddlewareResponse> HandleAsync(Update update, IAuthenticatedUser command) {
-		var user = await context.Set<User>().Include(x => x.Roles).FirstOrDefaultAsync(x => x.Id == command.GetUserId(update));
+public class AuthenticationMiddleware<TUser, TRole, TRedirect>(IRepository<TUser> users) : ICommandMiddleware<IAuthenticated<TUser, TRole>>
+	where TRedirect : ICommand
+	where TUser : IUser<TUser, TRole>
+	where TRole : IRole<TUser, TRole> {
+	public async Task<IMiddlewareResponse> HandleAsync(Update update, IAuthenticated<TUser, TRole> command) {
+		var user = await users.GetAsync(command.GetUserId(update));
 
 		if (user is null) {
-			var response = new MiddlewareResponse {
-				IsSuccess = false,
-				Exception = new Exception("User not found"),
-			};
-
-			response.SetRedirect<IRegisterCommand>();
-
-			return response;
+			return MiddlewareResponse.CreateException<TRedirect>("User not found");
 		}
 
 		command.User = user;

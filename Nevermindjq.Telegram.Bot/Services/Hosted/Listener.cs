@@ -1,7 +1,7 @@
 using System.Reflection;
 
 using Microsoft.Extensions.Hosting;
-using Nevermindjq.Models.Services.States.Abstractions;
+using Nevermindjq.Models.States.Abstractions;
 using Nevermindjq.Telegram.Bot.Extensions;
 using Nevermindjq.Telegram.Bot.Services.Abstractions;
 using Nevermindjq.Telegram.Bot.States;
@@ -13,7 +13,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace Nevermindjq.Telegram.Bot.Services.Hosted;
 
-public class Listener(ITelegramBotClient bot, IState<BotState> state, IUpdateDispatcher dispatcher) : IHostedService, IUpdateHandler {
+internal class Listener(ITelegramBotClient bot, IState<BotState> state, IUpdateDispatcher dispatcher) : IHostedService, IUpdateHandler {
 	public async Task StartAsync(CancellationToken cancellationToken) {
 		Log.Information("Listener starting");
 

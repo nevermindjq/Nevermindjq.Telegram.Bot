@@ -13,7 +13,8 @@ public static class ClientExtensions {
 	public static Task RegisterCommandsAsync(this ITelegramBotClient client, Assembly assembly) {
 		i_CommandAttributes.AddRange(
 			assembly.Commands()
-					.Select(x => x.attr)
+					.SelectMany(x => x.attrs)
+					.Where(x => x is { Path.Length: > 1 })
 		);
 
 		return client.SetMyCommands(
