@@ -9,25 +9,25 @@ namespace Nevermindjq.Telegram.Bot.Commands.Base;
 public abstract class InformationCommand : Command, IInformationCommand {
 	public ParseMode ParseMode { get; set; } = ParseMode.Html;
 
-	public abstract Task ProcessAsync(Update update);
+	public virtual Task ProcessAsync(Update update) => Task.CompletedTask;
 
-	public abstract string BuildText();
+	public abstract string BuildText(Update update);
 
-	public abstract InlineKeyboardMarkup BuildMarkup();
+	public abstract InlineKeyboardMarkup BuildMarkup(Update update);
 
 	public override async Task ExecuteAsync(Update update) {
 		await ProcessAsync(update);
 
 		switch (update) {
 			case { Message: not null }:
-				await Bot.SendMessage(update.Message.From.Id, BuildText(), ParseMode, replyMarkup: BuildMarkup());
+				await Bot.SendMessage(update.Message.From.Id, BuildText(update), ParseMode, replyMarkup: BuildMarkup(update));
 				break;
 			case { CallbackQuery: not null }:
 				await Bot.EditMessageText(
 					update.CallbackQuery.From.Id,
 					update.CallbackQuery.Message.MessageId,
-					BuildText(), ParseMode,
-					replyMarkup: BuildMarkup()
+					BuildText(update), ParseMode,
+					replyMarkup: BuildMarkup(update)
 				);
 				break;
 			default:
@@ -44,6 +44,34 @@ public abstract class InformationCommand : Command, IInformationCommand {
 				return update.Message.From.Id;
 			case { CallbackQuery: not null }:
 				return update.CallbackQuery.From.Id;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(update));
+		}
+	}
+}
+
+public abstract class InformationCommandAsync : InformationCommand, IInformationCommandAsync {
+	public override string BuildText(Update update) => BuildTextAsync(update).Result;
+	public abstract Task<string> BuildTextAsync(Update update);
+
+	public override InlineKeyboardMarkup BuildMarkup(Update update) => BuildMarkupAsync(update).Result;
+	public abstract Task<InlineKeyboardMarkup> BuildMarkupAsync(Update update);
+
+	public override async Task ExecuteAsync(Update update) {
+		await ProcessAsync(update);
+
+		switch (update) {
+			case { Message: not null }:
+				await Bot.SendMessage(update.Message.From.Id, await BuildTextAsync(update), ParseMode, replyMarkup: await BuildMarkupAsync(update));
+			break;
+			case { CallbackQuery: not null }:
+				await Bot.EditMessageText(
+					update.CallbackQuery.From.Id,
+					update.CallbackQuery.Message.MessageId,
+					await BuildTextAsync(update), ParseMode,
+					replyMarkup: await BuildMarkupAsync(update)
+				);
+			break;
 			default:
 				throw new ArgumentOutOfRangeException(nameof(update));
 		}
