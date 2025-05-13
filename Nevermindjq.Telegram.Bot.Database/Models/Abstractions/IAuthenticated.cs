@@ -17,7 +17,7 @@ public interface IAuthenticated<TUser, TRole> : ICommand
 			case { CallbackQuery: not null }:
 				return update.CallbackQuery.From.Id;
 			default:
-				throw new NotImplementedException();
+				throw new ArgumentOutOfRangeException();
 		}
 	}
 }

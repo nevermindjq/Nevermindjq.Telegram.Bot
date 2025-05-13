@@ -11,30 +11,64 @@ using Newtonsoft.Json;
 using Serilog;
 
 using Telegram.Bot;
-using Telegram.Bot.Types;
 
 namespace Nevermindjq.Telegram.Bot.Services;
 
 internal class UpdateDispatcher(IServiceScopeFactory factory, ITelegramBotClient bot) : IUpdateDispatcher, IUpdateMediator<long> {
-	private readonly Dictionary<long, Type> m_commands = new();
+	private readonly Dictionary<long, (Type command_type, string? command_key, uint delete_count)?> m_commands = new();
 
 	public async Task Dispatch(Update update) {
+		await using var scope = factory.CreateAsyncScope();
+		var services = scope.ServiceProvider;
+
+		// Get id
+
+		long id = 0;
+
+		switch (update) {
+			case { Message: not null }:
+				id = update.Message.From.Id;
+				break;
+			case { CallbackQuery: not null }:
+				id = update.CallbackQuery.From.Id;
+				break;
+		}
+
+		// Get by mediator
+		ICommand? command = null;
+
+		if (GetNext(id) is { } next && update is { Message: not null }) {
+			if (next.command_key is not null) {
+				var found = services.GetKeyedServices<ICommand>($"{nameof(Update)} {next.command_key}");
+
+				if (next.command_type == typeof(ICommand) && found.Count() == 1) {
+					command = found.FirstOrDefault();
+				}
+				else {
+					command = found.FirstOrDefault(x => x.GetType() == next.command_type);
+				}
+			}
+			else {
+				command = (ICommand?)services.GetService(next.command_type);
+			}
+
+			await bot.DeleteMessages(id, new long[next.delete_count].Select((_, i) => {
+				switch (update) {
+					case { Message: not null }:
+						return update.Message.MessageId - i;
+					case { CallbackQuery: not null }:
+						return update.CallbackQuery.Message.MessageId - i;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+			}));
+		}
+
+		// Get by trigger
 		if (GetTrigger(update) is not { } trigger) {
 			Log.Warning("Trigger not found for update\n{0}", JsonConvert.SerializeObject(update));
 
 			return;
-		}
-
-		await using var scope = factory.CreateAsyncScope();
-		var services = scope.ServiceProvider;
-
-		// Get command
-		ICommand? command = null;
-
-		if (update is { Message.From.Id: var id } && GetNext(id) is { } next) {
-			command = (ICommand?)services.GetService(next);
-
-			await bot.DeleteMessages(id, [update.Message.MessageId, update.Message.MessageId - 1]);
 		}
 
 		command ??= services.GetKeyedService<ICommand>($"{nameof(Update)} {trigger}");
@@ -94,7 +128,7 @@ internal class UpdateDispatcher(IServiceScopeFactory factory, ITelegramBotClient
 	#region Middlewares
 
 	protected Task<IMiddlewareResponse> InvokeMiddleware(object? middleware, params object?[]? args) {
-		return (Task<IMiddlewareResponse>)middleware.GetType().GetMethod("HandleAsync")!.Invoke(middleware, args)!;
+		return (Task<IMiddlewareResponse>)middleware!.GetType().GetMethod("HandleAsync")!.Invoke(middleware, args)!;
 	}
 
 	protected async Task<bool> ExecuteMiddleware(IServiceProvider services, Update update, IMiddlewareResponse? response, Type middleware_type, Type command_type) {
@@ -161,27 +195,27 @@ internal class UpdateDispatcher(IServiceScopeFactory factory, ITelegramBotClient
 
 	#region IUpdateMediator
 
-	public void AddNext<TCommand>(long key) where TCommand : ICommand {
+	public void AddNext<TCommand>(long key, string? command_key = null, uint? delete_count = null) where TCommand : ICommand {
 #if DEBUG
 		Log.Debug("Added new command: {0}. Key: {1}", typeof(TCommand).Name, key);
 #endif
-		if (!m_commands.TryAdd(key, typeof(TCommand))) {
-			m_commands[key] = typeof(TCommand);
+		if (!m_commands.TryAdd(key, (typeof(TCommand), command_key, delete_count ?? 2))) {
+			m_commands[key] = (typeof(TCommand), command_key, delete_count ?? 2);
 		}
 	}
 
-	public Type? GetNext(long key) {
-		if (m_commands.GetValueOrDefault(key) is not { } type) {
+	public (Type command_type, string? command_key, uint delete_count)? GetNext(long key) {
+		if (m_commands.GetValueOrDefault(key) is not { } tuple) {
 			return null;
 		}
 
 		m_commands.Remove(key);
 
 #if DEBUG
-		Log.Debug("Got & Removed command: {0}. Key: {1}", type.Name, key);
+		Log.Debug("Got & Removed command: {0}. Key: {1}", tuple.command_type.Name, key);
 #endif
 
-		return type;
+		return tuple;
 	}
 
 	#endregion

@@ -19,7 +19,7 @@ public class AuthorizationMiddleware<TUser, TRole, TRedirect> : IAttributedMiddl
 	where TUser : IUser<TUser, TRole>
 	where TRole : IRole<TUser, TRole> {
 	public Task<IMiddlewareResponse?> HandleAsync(Update update, AuthorizeAttribute attribute, IAuthenticated<TUser, TRole> command) {
-		if (attribute.Roles?.Split(',') is not { } attr_roles) {
+		if (attribute.Policy?.Split(',') is not { } attr_roles) {
 			Log.Warning("Roles not set for command {CommandName}", command.GetType().Name);
 
 			return Task.FromResult<IMiddlewareResponse?>(MiddlewareResponse.CreateException<TRedirect>($"Roles not set for command {command.GetType().Name}"));
