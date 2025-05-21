@@ -10,18 +10,18 @@
 ## Command Abstractions
 
 * [ICommand](command-abstractions/icommand.md)
-
-***
-
-* [IInjectedCommand](iinjectedcommand.md)
-* [IInformationCommand](iinformationcommand.md)
+* [IInjectedCommand](command-abstractions/iinjectedcommand.md)
 
 ## 💬 Filtered Commands
 
-* [Message Command](filtered-commands/message-command.md)
-* [Callback Command](filtered-commands/callback-command.md)
+* [Message Command](commands/message-command.md)
+* [Callback Command](commands/callback-command.md)
 * [Custom Command](filtered-commands/custom-command.md)
 
 ## 📰 Controls
 
-* [Page 1](controls/page-1.md)
+* [InformationCommand](controls/informationcommand.md)
+* [PaginationCallback](controls/paginationcallback.md)
+* [DeleteMessage](controls/deletemessage.md)
+* [SetValue Commands](controls/setvalue-commands.md)
+* [Switcher](controls/switcher.md)
