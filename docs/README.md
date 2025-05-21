@@ -24,8 +24,8 @@ A C# library built on top of the [Telegram.Bot](https://github.com/TelegramBots/
 
 ### 1. Install via NuGet
 
-#### Package Manager
-
+{% tabs %}
+{% tab title="Package Manager" %}
 ```powershell
 # Core package
 Install-Package Nevermindjq.Telegram.Bot -Source GitHub/Nevermindjq
@@ -33,22 +33,21 @@ Install-Package Nevermindjq.Telegram.Bot -Source GitHub/Nevermindjq
 # Database extensions with UI (user auth)
 Install-Package Nevermindjq.Telegram.Bot.Database -Source GitHub/Nevermindjq
 ```
+{% endtab %}
 
-***
+{% tab title=".NET CLI" %}
+```bash
+# Core package
+dotnet add package Nevermindjq.Telegram.Bot --source GitHub/Nevermindjq
 
-#### .NET CLI
-
-<pre class="language-bash"><code class="lang-bash"># Core package
-<strong>dotnet add package Nevermindjq.Telegram.Bot --source GitHub/Nevermindjq
-</strong>
 # Database extensions with UI and user authentication/authorization
 dotnet add package Nevermindjq.Telegram.Bot.Database --source GitHub/Nevermindjq
-</code></pre>
-
-> Authentication and Authorization requires adding users to database.
+```
+{% endtab %}
+{% endtabs %}
 
 > Need to add the custom NuGet source?\
-> Check out[ How to append NuGet source](get-started/how-to-add-nuget-source.md) for step-by-step instructions.
+> Check out [How to append NuGet source](get-started/how-to-add-nuget-source.md) for step-by-step instructions.
 
 ***
 
