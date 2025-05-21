@@ -10,3 +10,4 @@
 ## 💬 Commands
 
 * [Message Command](commands/message-command.md)
+* [Callback Command](commands/callback-command.md)
