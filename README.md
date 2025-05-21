@@ -24,17 +24,16 @@ Install-Package Nevermindjq.Telegram.Bot.Database -Source GitHub/Nevermindjq
 
 #### .NET CLI
 
-<pre class="language-bash"><code class="lang-bash"># Core package
-<strong>dotnet add package Nevermindjq.Telegram.Bot --source GitHub/Nevermindjq
-</strong>
+```bash
+# Core package
+dotnet add package Nevermindjq.Telegram.Bot --source GitHub/Nevermindjq
+
 # Database extensions with UI and user authentication/authorization
 dotnet add package Nevermindjq.Telegram.Bot.Database --source GitHub/Nevermindjq
-</code></pre>
-
-> Authentication and Authorization requires adding users to database.
+```
 
 > Need to add the custom NuGet source?\
-> Check out[ How to append NuGet source](get-started/how-to-add-nuget-source.md) for step-by-step instructions.
+> Check out [How to append NuGet source](get-started/how-to-add-nuget-source.md) for step-by-step instructions.
 
 ***
 
@@ -43,15 +42,7 @@ dotnet add package Nevermindjq.Telegram.Bot.Database --source GitHub/Nevermindjq
 In your `Program.cs` (or `Startup.cs`), register the bot services:
 
 ```csharp
-using Nevermindjq.Telegram.Bot.Extensions;
-
-// Build
-var builder = Host.CreateApplicationBuilder(args);
-
 builder.Services.AddTelegramBot(builder.Configuration["Bot:Token"]!, use_caching_user_context: false);
-
-// Run
-builder.Build().Run();
 ```
 
 ***
@@ -76,16 +67,6 @@ public class StartCommand : MessageCommand {
 	}
 }
 ```
-
-#### Explanation of StartCommand Code
-
-* **Attribute**:
-  * `[Path("/start")]`: This attribute associates the command with the `/start` path. It listens for messages with this specific command.
-* **Class Definition**:
-  * `public class StartCommand : MessageCommand`: `StartCommand` inherits from `MessageCommand`, which allows it to receive non-null messages from `Telegram.Bot.Update`.
-* **ExecuteAsync Method**:
-  * `public override Task ExecuteAsync(Update update)`: This overrides the base method from `MessageCommand` to define custom execution logic.
-  * `return Bot.SendMessage(update.Message.From.Id, $"Hello {update.Message.From.Username}! You send: {update.Message.Text}");`: Sends a formatted message back to the user, acknowledging receipt of their message and including their username and text.
 
 Commands in the `Nevermindjq.Telegram.Bot` library are automatically registered in the Dependency Injection (DI) container. This is achieved by making use of reflection to scan for all classes that inherit from `ICommand`.
 
