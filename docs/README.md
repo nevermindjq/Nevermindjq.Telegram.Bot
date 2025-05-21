@@ -1,3 +1,17 @@
+---
+layout:
+  title:
+    visible: true
+  description:
+    visible: true
+  tableOfContents:
+    visible: true
+  outline:
+    visible: true
+  pagination:
+    visible: true
+---
+
 # 👋 Welcome
 
 ## Welcome to **Nevermindjq.Telegram.Bot** 👋
@@ -76,16 +90,6 @@ public class StartCommand : MessageCommand {
 	}
 }
 ```
-
-#### Explanation of StartCommand Code
-
-* **Attribute**:
-  * `[Path("/start")]`: This attribute associates the command with the `/start` path. It listens for messages with this specific command.
-* **Class Definition**:
-  * `public class StartCommand : MessageCommand`: `StartCommand` inherits from `MessageCommand`, which allows it to receive non-null messages from `Telegram.Bot.Update`.
-* **ExecuteAsync Method**:
-  * `public override Task ExecuteAsync(Update update)`: This overrides the base method from `MessageCommand` to define custom execution logic.
-  * `return Bot.SendMessage(update.Message.From.Id, $"Hello {update.Message.From.Username}! You send: {update.Message.Text}");`: Sends a formatted message back to the user, acknowledging receipt of their message and including their username and text.
 
 Commands in the `Nevermindjq.Telegram.Bot` library are automatically registered in the Dependency Injection (DI) container. This is achieved by making use of reflection to scan for all classes that inherit from `ICommand`.
 
