@@ -1,17 +1,3 @@
----
-layout:
-  title:
-    visible: true
-  description:
-    visible: false
-  tableOfContents:
-    visible: true
-  outline:
-    visible: true
-  pagination:
-    visible: true
----
-
 # 📦 How to add NuGet source
 
 To install packages from the `Nevermindjq` GitHub feed, you need to add the custom NuGet source to your system.
