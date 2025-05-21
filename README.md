@@ -1,4 +1,18 @@
-# Welcome
+---
+layout:
+  title:
+    visible: true
+  description:
+    visible: false
+  tableOfContents:
+    visible: true
+  outline:
+    visible: true
+  pagination:
+    visible: true
+---
+
+# 👋 Welcome
 
 ## Welcome to **Nevermindjq.Telegram.Bot** 👋
 
@@ -34,7 +48,7 @@ dotnet add package Nevermindjq.Telegram.Bot.Database --source GitHub/Nevermindjq
 > Authentication and Authorization requires adding users to database.
 
 > Need to add the custom NuGet source?\
-> Check out How to append NuGet source for step-by-step instructions.
+> Check out[ How to append NuGet source](get-started/how-to-add-nuget-source.md) for step-by-step instructions.
 
 ***
 
