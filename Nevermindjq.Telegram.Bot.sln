@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nevermindjq.Telegram.Bot", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nevermindjq.Telegram.Bot.Database", "Nevermindjq.Telegram.Bot.Database\Nevermindjq.Telegram.Bot.Database.csproj", "{72FDD291-0513-4B86-9395-82769BDDB5A0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example", "Example\Example.csproj", "{67E7C7A4-6D3E-484D-B8A7-3B64C49BDD02}"
+EndProject
 
 
 Global
@@ -20,6 +22,10 @@ Global
 		{72FDD291-0513-4B86-9395-82769BDDB5A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72FDD291-0513-4B86-9395-82769BDDB5A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72FDD291-0513-4B86-9395-82769BDDB5A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67E7C7A4-6D3E-484D-B8A7-3B64C49BDD02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67E7C7A4-6D3E-484D-B8A7-3B64C49BDD02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67E7C7A4-6D3E-484D-B8A7-3B64C49BDD02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67E7C7A4-6D3E-484D-B8A7-3B64C49BDD02}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
