@@ -5,8 +5,6 @@ using Nevermindjq.Telegram.Bot.Middlewares.Abstractions;
 using Nevermindjq.Telegram.Bot.Middlewares.Models.Abstractions;
 using Nevermindjq.Telegram.Bot.Services.Abstractions;
 
-using Newtonsoft.Json;
-
 using Serilog;
 
 using Telegram.Bot;
