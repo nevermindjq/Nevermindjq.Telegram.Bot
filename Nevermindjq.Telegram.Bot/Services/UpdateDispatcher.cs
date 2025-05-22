@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
 using Nevermindjq.Telegram.Bot.Commands.Abstractions;
-using Nevermindjq.Telegram.Bot.Extensions;
 using Nevermindjq.Telegram.Bot.Middlewares.Abstractions;
 using Nevermindjq.Telegram.Bot.Middlewares.Models.Abstractions;
 using Nevermindjq.Telegram.Bot.Services.Abstractions;
@@ -14,71 +13,16 @@ using Telegram.Bot;
 
 namespace Nevermindjq.Telegram.Bot.Services;
 
-internal class UpdateDispatcher(IServiceScopeFactory factory, ITelegramBotClient bot) : IUpdateDispatcher, IUpdateMediator<long> {
-	private readonly Dictionary<long, (Type command_type, string? command_key, uint delete_count)?> m_commands = new();
-
+internal class UpdateDispatcher(IServiceScopeFactory factory, ICommandsResolver commands) : IUpdateDispatcher {
 	public async Task Dispatch(Update update) {
 		await using var scope = factory.CreateAsyncScope();
 		var services = scope.ServiceProvider;
 
-		// Get id
-
-		long id = 0;
-
-		switch (update) {
-			case { Message: not null }:
-				id = update.Message.From.Id;
-				break;
-			case { CallbackQuery: not null }:
-				id = update.CallbackQuery.From.Id;
-				break;
-		}
-
-		// Get by mediator
-		ICommand? command = null;
-
-		if (GetNext(id) is { } next && update is { Message: not null }) {
-			if (next.command_key is not null) {
-				var found = services.GetKeyedServices<ICommand>($"{nameof(Update)} {next.command_key}");
-
-				if (next.command_type == typeof(ICommand) && found.Count() == 1) {
-					command = found.FirstOrDefault();
-				}
-				else {
-					command = found.FirstOrDefault(x => x.GetType() == next.command_type);
-				}
-			}
-			else {
-				command = (ICommand?)services.GetService(next.command_type);
-			}
-
-			await bot.DeleteMessages(id, new long[next.delete_count].Select((_, i) => {
-				switch (update) {
-					case { Message: not null }:
-						return update.Message.MessageId - i;
-					case { CallbackQuery: not null }:
-						return update.CallbackQuery.Message.MessageId - i;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-			}));
-		}
-
-		// Get by trigger
-		if (GetTrigger(update) is not { } trigger) {
-			Log.Warning("Trigger not found for update\n{0}", JsonConvert.SerializeObject(update));
-
+		// Get command
+		if ((await commands.ByMediatorAsync(services, update) ?? await commands.ByTriggerAsync(services, update)) is not { } command) {
 			return;
 		}
-
-		command ??= services.GetKeyedService<ICommand>($"{nameof(Update)} {trigger}");
-
-		if (command is null) {
-			Log.Warning("Command with key: '{0} {1}' is not found.", nameof(Update), trigger);
-
-			return;
-		}
-
+		
 		// Execute typed middlewares
 		if (!await ExecuteMiddlewares(
 			services, update, command,
@@ -181,41 +125,6 @@ internal class UpdateDispatcher(IServiceScopeFactory factory, ITelegramBotClient
 		}
 
 		return true;
-	}
-
-	#endregion
-
-	protected string? GetTrigger(Update update) {
-		return update switch {
-			{ Message.Text: not null }       => update.Message.Text.UpTo(),
-			{ CallbackQuery.Data: not null } => update.CallbackQuery.Data.UpTo(),
-			_                                => null
-		};
-	}
-
-	#region IUpdateMediator
-
-	public void AddNext<TCommand>(long key, string? command_key = null, uint? delete_count = null) where TCommand : ICommand {
-#if DEBUG
-		Log.Debug("Added new command: {0}. Key: {1}", typeof(TCommand).Name, key);
-#endif
-		if (!m_commands.TryAdd(key, (typeof(TCommand), command_key, delete_count ?? 2))) {
-			m_commands[key] = (typeof(TCommand), command_key, delete_count ?? 2);
-		}
-	}
-
-	public (Type command_type, string? command_key, uint delete_count)? GetNext(long key) {
-		if (m_commands.GetValueOrDefault(key) is not { } tuple) {
-			return null;
-		}
-
-		m_commands.Remove(key);
-
-#if DEBUG
-		Log.Debug("Got & Removed command: {0}. Key: {1}", tuple.command_type.Name, key);
-#endif
-
-		return tuple;
 	}
 
 	#endregion

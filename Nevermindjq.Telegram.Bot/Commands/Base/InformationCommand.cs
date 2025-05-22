@@ -37,17 +37,6 @@ public abstract class InformationCommand : Command, IInformationCommand {
 
 	public override Task<bool> CanExecuteAsync(Update update) =>
 		Task.FromResult(update is { Message: not null } or { CallbackQuery: not null});
-
-	public long GetUserId(Update update) {
-		switch (update) {
-			case { Message: not null }:
-				return update.Message.From.Id;
-			case { CallbackQuery: not null }:
-				return update.CallbackQuery.From.Id;
-			default:
-				throw new ArgumentOutOfRangeException(nameof(update));
-		}
-	}
 }
 
 public abstract class InformationCommandAsync : InformationCommand, IInformationCommandAsync {
