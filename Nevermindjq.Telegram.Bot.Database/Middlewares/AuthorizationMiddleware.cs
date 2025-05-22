@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 
-using Nevermindjq.Models.Repositories.Abstractions;
 using Nevermindjq.Telegram.Bot.Commands.Abstractions;
 using Nevermindjq.Telegram.Bot.Database.Entities.Identity.Abstractions;
 using Nevermindjq.Telegram.Bot.Database.Models.Abstractions;
