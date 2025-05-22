@@ -92,13 +92,14 @@ public class BroadcastPanel<TUser, TRole, TOptions>(
 public class BroadcastTest<TUser, TRole, TOptions>(
 	IRepository<TUser> users,
 	IRepository<TOptions> options,
+	IUpdateResolver resolver,
 	IUserContextAsync context
 	) : Callback
 	where TUser : IUser<TUser, TRole>
 	where TRole : IRole<TUser, TRole>
 	where TOptions : IBroadcastOptions {
 	public override async Task ExecuteAsync(Update update) {
-		await new BroadcastSendConfirm<TUser, TRole, TOptions>(users) {
+		await new BroadcastSendConfirm<TUser, TRole, TOptions>(users, resolver) {
 			Bot = Bot,
 			ContextAsync = context,
 			Request = new BroadcastRequest<TOptions> {
@@ -111,7 +112,7 @@ public class BroadcastTest<TUser, TRole, TOptions>(
 }
 
 [Path("brd:send:confirm"), Authorize("Admin")]
-public class BroadcastSendConfirm<TUser, TRole, TOptions>(IRepository<TUser> users) : MessageCommand
+public class BroadcastSendConfirm<TUser, TRole, TOptions>(IRepository<TUser> users, IUpdateResolver resolver) : MessageCommand
 	where TUser : IUser<TUser, TRole>
 	where TRole : IRole<TUser, TRole>
 	where TOptions : IBroadcastOptions {
@@ -181,19 +182,19 @@ public class BroadcastSendConfirm<TUser, TRole, TOptions>(IRepository<TUser> use
 	}
 
 	public override async Task ExecuteAsync(Update update) {
-		Request ??= await ContextAsync.GetAsync<BroadcastRequest<TOptions>>(update.Message.From.Id);
+		Request ??= await ContextAsync.GetAsync<BroadcastRequest<TOptions>>(resolver.UserId(update));
 
 		if (Request is null) {
 			throw new ArgumentNullException(nameof(Request));
 		}
 
 		if (!IsValidOptions(Request.Options)) {
-			await Bot.SendMessage(update.Message.From.Id, "Получатели не выбраны", replyMarkup: new InlineKeyboardMarkup("Вернуться", "broadcast"));
+			await Bot.SendMessage(resolver.UserId(update), "Получатели не выбраны", replyMarkup: new InlineKeyboardMarkup("Вернуться", "broadcast"));
 
 			return;
 		}
 
-		Request.Markup = GetMarkup(update);
+		Request.Markup ??= GetMarkup(update);
 
 		// Send
 		var receivers = await GetUserIds(Request.Options);
@@ -212,6 +213,6 @@ public class BroadcastSendConfirm<TUser, TRole, TOptions>(IRepository<TUser> use
 			}
 		}
 
-		await Bot.SendMessage(update.Message.From.Id, "Сообщения успешно отправлены", replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Вернуться", "broadcast")));
+		await Bot.SendMessage(resolver.UserId(update), "Сообщения успешно отправлены", replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithCallbackData("Вернуться", "broadcast")));
 	}
 }

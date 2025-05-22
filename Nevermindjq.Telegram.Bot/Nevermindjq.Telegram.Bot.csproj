@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
 
         <PackageId>Nevermindjq.Telegram.Bot</PackageId>
-        <Version>2.1.0</Version>
+        <Version>2.1.1</Version>
         <Authors>Nevermindjq</Authors>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <IsPackable>true</IsPackable>
